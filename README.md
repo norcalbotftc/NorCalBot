@@ -1,13 +1,15 @@
 # NorCal Bot
-This is the official repository for NorCalBot. It is provided to you by [FTC Team 7303 RoboAvatars](roboavatars.weebly.com).
+This is the official repository for the NorCal Bot. It is provided to you by [FTC Team 7303 RoboAvatars](roboavatars.weebly.com).
 
-NorCalBot is a [Discord](discord.com) bot that allows NorCal FTC team members to:
+NorCal Bot is a [Discord](discord.com) bot that allows NorCal FTC team members to:
  1. look at NorCal competition data.
  2. look at which teams have agreed to the [NorCal FTC Fair Play agreement](https://www.norcalftc.org/fair-play-for-ftc/).
  3. look at competition registration for specific teams.
  4. participate in community events.
  5. use meme commands.
  6. and much more!
+
+I frequently update the bot in a private repository, but I can update the source code here if you would like. To request a code update here, just DM me on Discord. You can get my contact information from the FTC Discord (Ansh | 7303 | Software) and the NorCal Discord (teeter | 7303).
 
 This repository is licensed under the GNU General Purpose License. A copy of the license is provided in this project under the name COPYING.txt. Please visit https://www.gnu.org/licenses/ for license details.
 
