@@ -24,5 +24,5 @@ By running, copying, distributing, and/or modifying any part of this repository,
 ## How to Use This Code:
  1. Clone/fork this repository or simply download a .zip file.
  2. Make sure that you have a Python version of 3.6.x or later. You will also need the pip package installer.
- 3. Use pip to install the following packages: asyncio, beautifulsoup4, discord.py, python-dotenv, and requests. You can do this by running the following command: `pip install asyncio beautifulsoup4 discord.py python-dotenv requests`.
+ 3. Use pip to install the following packages: asyncio, beautifulsoup4, discord.py, python-dotenv, pytz, and requests. You can do this by running the following command: `pip install asyncio beautifulsoup4 discord.py python-dotenv pytz requests`.
  4. The source code is now ready for you to modify and run. The main file to run is `bot.py`. Enjoy!
