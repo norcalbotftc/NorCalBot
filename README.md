@@ -17,7 +17,7 @@ This repository is licensed under the GNU General Purpose License. A copy of the
 By running, copying, distributing, and/or modifying any part of this repository, you agree that you are fully responsible for all of the consequences arising from your use or inability to use this program.
 
 ## Notes:
-**The information delivered from this bot is sources from [NorCal FTC](norcalftc.org) and [FIRST API](https://ftc-events.firstinspires.org/services/API).**
+**The information delivered from this bot is from [NorCal FTC](norcalftc.org), [FIRST API](https://ftc-events.firstinspires.org/services/API), and [FTC Stats API](https://dynamic.jackcrane.rocks/api/ftcstats/docs.php).**
 
 **This bot may not always provide the most up-to-date information. This bot is meant solely for convenience purposes. If you are looking for accurate, updated data, use the sources listed above.**
 
