@@ -72,7 +72,7 @@ comps = {'DALY': [524, 3470, 7641, 8375, 8381, 8404, 9657, 9784, 13274, 13345, 1
 fairplay = [524, 4345, 4950, 4998, 5206, 5773, 6038, 6165, 6448, 6949, 7083, 7128, 7303, 7316, 7390, 7610, 7641, 7854, 8300, 8367, 8375, 8381, 8404, 8872, 9614, 9656, 9768, 9784, 11039, 11201, 11311, 11466, 11467, 11575, 11689, 12635, 12869, 13107, 13180, 13217, 13218, 13345, 13356, 13380, 14300, 14318, 14341, 14374, 14473, 14504, 14525, 14663, 14969, 15385, 16026, 16072, 16177, 16197, 16236, 16306, 16309, 16532, 16533, 16535, 16594, 16944, 17759, 18183, 18190, 18219, 18223, 18254, 18272, 18309, 18340, 18373, 18466, 18513, 18564]
 
 # Initialize Bot
-VERSION = '2021.3.5.7'
+VERSION = '2021.3.5.8'
 loop_counter = 0
 client = discord.Client()
 
@@ -674,7 +674,7 @@ async def on_message(message):
                             if rank == '-1':
                                 rank = '250+'
 
-                        info.add_field(name = str(int(key) + 1) + ". " + data.get('teamname'), value = 'OPR: ' + str(data.get('opr')) + '\nMax score: ' + str(data.get('max_np_score')) + (('\nGlobal Rank: ' + rank) if ca else ''))
+                        info.add_field(name = str(len(names) + 1) + ". " + data.get('teamname'), value = 'OPR: ' + str(data.get('opr')) + '\nMax score: ' + str(data.get('max_np_score')) + (('\nGlobal Rank: ' + rank) if ca else ''))
                         names.append(name)
 
             await message.channel.send(content = None, embed = info)
