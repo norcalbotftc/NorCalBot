@@ -16,7 +16,7 @@
 #  along with NorCal Bot.  If not, see <https://www.gnu.org/licenses/>.
 #
 #  Original Author: Ansh Gandhi
-#  Original Source Code: <https://github.com/anshgandhi4/NorCal-Bot/>
+#  Original Source Code: <https://github.com/norcalbotftc/NorCalBot/>
 #
 #  EVERYTHING ABOVE THIS LINE MUST BE KEPT AS IS UNDER GNU GPL LICENSE RULES.
 
@@ -46,9 +46,9 @@ TEST_GUILD = int(os.getenv('TEST_GUILD'))
 TEST_CHANNEL = int(os.getenv('TEST_CHANNEL'))
 
 # Commands
-COMMANDS = ('help', 'about', 'ping', 'version', 'moo', 'monke', 'laff', 'joos', 'bts', 'osas', 'bigshaq', 'asznee', 'frydae', 'wednesdae', 'beteor', 'leek', 'sad', 'comrade', 'veriguds', 'veribads', 'sus', 'setcounters', 'stats', 'tlookup', 'clookup', 'comps', 'advancement', 'qual', 'fairplay', 'rankings', 'awards', 'scores', 'dscores', 'topteams', 'highscores', 'sourcecode', 'resources', 'special')
-HELP_COMMANDS = ('$' + COMMANDS[0], '$' + COMMANDS[1], '$' + COMMANDS[2], '$' + COMMANDS[3], '$' + COMMANDS[22], '$' + COMMANDS[23] + ' [team number]', '$' + COMMANDS[24] + ' [competition id]', '$' + COMMANDS[25], '$' + COMMANDS[26], '$' + COMMANDS[27], '$' + COMMANDS[28], '$' + COMMANDS[29] + ' [competition id]', '$' + COMMANDS[30] + ' [competition id]', '$' + COMMANDS[31] + ' [competition id] [team number]', '$' + COMMANDS[32] + ' [competition id] [team number]', '$' + COMMANDS[33] + ' [region]*', '$' + COMMANDS[34] + ' [region]*', '$' + COMMANDS[35], '$' + COMMANDS[36])
-HELP_MESSAGES = ('Shows this help message', 'Shows credits', 'To make sure the bot is running', 'Shows bot version', 'Shows the counters for each command', 'Shows the competitions for the registered team', 'Shows the registered teams for the specified competition', 'Shows all of the competition codes', 'Shows the advancement order for the specified competition', 'Shows a list of all teams qualified to NorCal Regionals', 'Shows a list of all of the fair play teams', 'Shows the rankings at a competition', 'Shows the award winners at a competition', 'Shows a team\'s scores at a competition', 'Shows a detailed breakdown of a team\'s scores at a competition', 'Shows top 15 teams in specified region', 'Shows top 10 scores in specified region', 'Shows the source code for this bot', 'Shows links for FTC resources')
+COMMANDS = ('help', 'about', 'ping', 'version', 'moo', 'monke', 'laff', 'joos', 'bts', 'osas', 'kwaza', 'bigshaq', 'asznee', 'frydae', 'wednesdae', 'beteor', 'leek', 'sad', 'comrade', 'veriguds', 'veribads', 'sus', 'setcounters', 'stats', 'tlookup', 'clookup', 'comps', 'advancement', 'qual', 'fairplay', 'rankings', 'awards', 'scores', 'dscores', 'topteams', 'highscores', 'sourcecode', 'resources', 'dm', 'special')
+HELP_COMMANDS = ('$' + COMMANDS[0], '$' + COMMANDS[1], '$' + COMMANDS[2], '$' + COMMANDS[3], '$' + COMMANDS[23], '$' + COMMANDS[24] + ' [team number]', '$' + COMMANDS[25] + ' [competition id]', '$' + COMMANDS[26], '$' + COMMANDS[27], '$' + COMMANDS[28], '$' + COMMANDS[29], '$' + COMMANDS[30] + ' [competition id]', '$' + COMMANDS[31] + ' [competition id]', '$' + COMMANDS[32] + ' [competition id] [team number]', '$' + COMMANDS[33] + ' [competition id] [team number]', '$' + COMMANDS[34] + ' [region]*', '$' + COMMANDS[35] + ' [region]*', '$' + COMMANDS[36], '$' + COMMANDS[37], '$' + COMMANDS[38])
+HELP_MESSAGES = ('Shows this help message', 'Shows credits', 'To make sure the bot is running', 'Shows bot version', 'Shows the counters for each command', 'Shows the competitions for the registered team', 'Shows the registered teams for the specified competition', 'Shows all of the competition codes', 'Shows the advancement order for the specified competition', 'Shows a list of all teams qualified to NorCal Regionals', 'Shows a list of all of the fair play teams', 'Shows the rankings at a competition', 'Shows the award winners at a competition', 'Shows a team\'s scores at a competition', 'Shows a detailed breakdown of a team\'s scores at a competition', 'Shows top 15 teams in specified region', 'Shows top 10 scores in specified region', 'Shows the source code for this bot', 'Shows links for FTC resources', 'Start DM with User')
 NUM_COMMANDS = len(COMMANDS)
 
 # FIRST API
@@ -76,7 +76,7 @@ slots = ['Inspire, 1st', 'Next Rank', 'Inspire, 2nd', 'Next Rank', 'Inspire, 3rd
 qual = [6165, 7303, 7390, 8375, 8381, 9784, 11039, 12635, 12869, 13217, 13356, 14300, 14341, 14525, 17759, 18254]
 
 # Initialize Bot
-VERSION = '2021.3.16.5'
+VERSION = '2021.3.23.5'
 loop_counter = 0
 client = discord.Client()
 
@@ -317,51 +317,56 @@ async def on_message(message):
             await log(9, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/698281158663733311/771914826804232192/unknown.png')
 
-        # bigshaq
+        # kwaza
         elif '$' + COMMANDS[10] in command:
             await log(10, command, guild)
+            await message.channel.send('https://cdn.discordapp.com/attachments/699668920335859732/823976109959676004/unknown.png')
+
+        # bigshaq
+        elif '$' + COMMANDS[11] in command:
+            await log(11, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/698281158663733311/771915056459808788/unknown.png')
 
         # asznee
-        elif '$' + COMMANDS[11] in command:
-            await log(11, command, guild)
+        elif '$' + COMMANDS[12] in command:
+            await log(12, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/698281158663733311/771915212684001320/unknown.png')
 
         # frydae
-        elif '$' + COMMANDS[12] in command:
-            await log(12, command, guild)
+        elif '$' + COMMANDS[13] in command:
+            await log(13, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/698281158663733311/774069046735142932/unknown.png')
 
         # wednesdae
-        elif '$' + COMMANDS[13] in command:
-            await log(13, command, guild)
+        elif '$' + COMMANDS[14] in command:
+            await log(14, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/699668920335859732/780676203580882944/flat750x075f-pad750x1000f8f8f8.u2.jpg')
 
         # beteor
-        elif '$' + COMMANDS[14] in command:
-            await log(14, command, guild)
+        elif '$' + COMMANDS[15] in command:
+            await log(15, command, guild)
             await message.channel.send('https://media.discordapp.net/attachments/743291565631602691/753110344523841557/beteor.jpg?width=500&height=250')
 
         # leek
-        elif '$' + COMMANDS[15] in command:
-            await log(15, command, guild)
+        elif '$' + COMMANDS[16] in command:
+            await log(16, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/699668920335859732/783229118816583700/unknown.png')
 
         # sad
-        elif '$' + COMMANDS[16] in command:
-            await log(16, command, guild)
+        elif '$' + COMMANDS[17] in command:
+            await log(17, command, guild)
             await message.channel.send('https://tenor.com/view/sad-down-gif-5337069')
 
         # comrade
-        elif '$' + COMMANDS[17] in command:
-            await log(17, command, guild)
+        elif '$' + COMMANDS[18] in command:
+            await log(18, command, guild)
             await message.channel.send('https://tenor.com/view/commie-communism-commie-lizard-lizard-lizard-dancing-gif-19535820')
 
         # veriguds
-        elif command.find('$' + COMMANDS[18]) == 0:
-            await log(18, command, guild)
+        elif command.find('$' + COMMANDS[19]) == 0:
+            await log(19, command, guild)
             lookup = command.split(' ')
-            if lookup[0] != '$' + COMMANDS[18] or len(lookup) != 2:
+            if lookup[0] != '$' + COMMANDS[19] or len(lookup) != 2:
                 await message.channel.send('For reacting "VERIGUDS" to a message, type "$veriguds", a space, and then the message id or message link. The message must be in this channel.')
             else:
                 try:
@@ -387,10 +392,10 @@ async def on_message(message):
                     await message.channel.send('For reacting "VERIGUDS" to a message, type "$veriguds", a space, and then the message id or message link. The message must be in this channel.')
 
         # veribads
-        elif command.find('$' + COMMANDS[19]) == 0:
-            await log(19, command, guild)
+        elif command.find('$' + COMMANDS[20]) == 0:
+            await log(20, command, guild)
             lookup = command.split(' ')
-            if lookup[0] != '$' + COMMANDS[19] or len(lookup) != 2:
+            if lookup[0] != '$' + COMMANDS[20] or len(lookup) != 2:
                 await message.channel.send(
                     'For reacting "VERIBADS" to a message, type "$veribads", a space, and then the message id or message link. The message must be in this channel.')
             else:
@@ -417,17 +422,17 @@ async def on_message(message):
                     await message.channel.send('For reacting "VERIBADS" to a message, type "$veribads", a space, and then the message id or message link. The message must be in this channel.')
 
         # sus
-        elif '$' + COMMANDS[20] in command:
-            await log(20, command, guild)
+        elif '$' + COMMANDS[21] in command:
+            await log(21, command, guild)
             await message.channel.send('https://cdn.discordapp.com/attachments/761658481328914482/817475965126180945/amogus.mp4')
 
         # setcounters
-        elif command.find('$' + COMMANDS[21]) == 0 and str(author) in ADMINS:
+        elif command.find('$' + COMMANDS[22]) == 0 and str(author) in ADMINS:
             counters = list(map(lambda c: int(c), command.split(' ')[1:]))
             if len(counters) == NUM_COMMANDS:
                 counter = {COMMANDS[index]: counters[index] for index in range(NUM_COMMANDS)}
-                await log(21, command, guild)
-                counter[COMMANDS[21]] = 0
+                await log(22, command, guild)
+                counter[COMMANDS[22]] = 0
 
                 stats = discord.Embed(title = 'NorCal Bot Command Set Counters', description = 'Counters have been reset')
                 stats.add_field(name = 'Total', value = sum(counter.values()))
@@ -444,8 +449,8 @@ async def on_message(message):
                 await message.channel.send('Incorrect Number of Counters. You sent ' + str(len(counters)) + ' but ' + str(NUM_COMMANDS) + ' are needed.')
 
         # stats
-        elif command == '$' + COMMANDS[22]:
-            await log(22, command, guild)
+        elif command == '$' + COMMANDS[23]:
+            await log(23, command, guild)
             stats = discord.Embed(title = 'NorCal Bot Command Counter', description = 'Shows the number of times each command is used')
             stats.add_field(name = 'Total', value = sum(counter.values()))
             overflowcounter = 1
@@ -459,8 +464,8 @@ async def on_message(message):
                 await message.channel.send(content = None, embed = stats)
 
         # tlookup
-        elif command.find('$' + COMMANDS[23]) == 0:
-            await log(23, command, guild)
+        elif command.find('$' + COMMANDS[24]) == 0:
+            await log(24, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$tlookup' or len(lookup) != 2:
                 await message.channel.send('For looking up a team, type "$tlookup", a space, and then the team number.')
@@ -479,8 +484,8 @@ async def on_message(message):
                     await message.channel.send('For looking up a team, type "$tlookup", a space, and then the team number.')
 
         # clookup
-        elif command.find('$' + COMMANDS[24]) == 0:
-            await log(24, command, guild)
+        elif command.find('$' + COMMANDS[25]) == 0:
+            await log(25, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$clookup' or len(lookup) != 2:
                 await message.channel.send('For looking up a competition, type "$clookup", a space, and then the competition ID.')
@@ -517,8 +522,8 @@ async def on_message(message):
                     await message.channel.send('For looking up a competition, type "$clookup", a space, and then the competition ID.')
 
         # comps
-        elif command == '$' + COMMANDS[25]:
-            await log(25, command, guild)
+        elif command == '$' + COMMANDS[26]:
+            await log(26, command, guild)
             info = discord.Embed(title = 'Competitions', description = 'Shows Codes for NorCal Competitions')
             for comp in comps.keys():
                 try:
@@ -528,8 +533,8 @@ async def on_message(message):
             await message.channel.send(content = None, embed = info)
 
         # advancement
-        elif command.find('$' + COMMANDS[26]) == 0:
-            await log(26, command, guild)
+        elif command.find('$' + COMMANDS[27]) == 0:
+            await log(27, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$advancement' or len(lookup) != 2:
                 await message.channel.send('To look up a qualifier\'s advancing team order, type "$advancement", a space, and then the competition ID.')
@@ -550,8 +555,8 @@ async def on_message(message):
                     await message.channel.send(content = None, embed = info)
 
         # qual
-        elif command == '$' + COMMANDS[27]:
-            await log(27, command, guild)
+        elif command == '$' + COMMANDS[28]:
+            await log(28, command, guild)
             info = discord.Embed(title = 'NorCal Regionals Qualifying Teams', description = 'This is a list of all of NorCal teams that have qualified for regionals. Teams in fairplay are marked with "*".')
             info.add_field(name = 'Number of Teams', value = str(len(qual)))
 
@@ -577,8 +582,8 @@ async def on_message(message):
                 await message.channel.send(content = None, embed = info)
 
         # fairplay
-        elif command == '$' + COMMANDS[28]:
-            await log(28, command, guild)
+        elif command == '$' + COMMANDS[29]:
+            await log(29, command, guild)
             info = discord.Embed(title = 'Fair Play Teams', description = 'A list of all of the fair play teams')
             info.add_field(name = 'Number of Fair Play Teams', value = str(len(fairplay)))
             info.add_field(name = '% of Teams in Fair Play', value = str(int(len(fairplay) / len(teams) * 100)))
@@ -599,8 +604,8 @@ async def on_message(message):
                 await message.channel.send(content = None, embed = info)
 
         # rankings
-        elif command.find('$' + COMMANDS[29]) == 0:
-            await log(29, command, guild)
+        elif command.find('$' + COMMANDS[30]) == 0:
+            await log(30, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$rankings' or len(lookup) != 2:
                 await message.channel.send('For looking up competition rankings, type "$rankings", a space, and then the competition ID.')
@@ -622,8 +627,8 @@ async def on_message(message):
                     await message.channel.send('The competition ID is invalid or the rankings have not been published yet.')
 
         # awards
-        elif command.find('$' + COMMANDS[30]) == 0:
-            await log(30, command, guild)
+        elif command.find('$' + COMMANDS[31]) == 0:
+            await log(31, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$awards' or len(lookup) != 2:
                 await message.channel.send('For looking up competition awards, type "$awards", a space, and then the competition ID.')
@@ -646,8 +651,8 @@ async def on_message(message):
                     await message.channel.send('The competition ID is invalid or the awards have not been published yet.')
 
         # scores
-        elif command.find('$' + COMMANDS[31]) == 0:
-            await log(31, command, guild)
+        elif command.find('$' + COMMANDS[32]) == 0:
+            await log(32, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$scores' or len(lookup) != 3:
                 await message.channel.send('For looking up a team\'s scores, type "$scores", a space, the competition ID, a space, and the team number.')
@@ -673,8 +678,8 @@ async def on_message(message):
                     await message.channel.send('The competition ID or team number is invalid or the scores have not been published yet.')
 
         # dscores
-        elif command.find('$' + COMMANDS[32]) == 0:
-            await log(32, command, guild)
+        elif command.find('$' + COMMANDS[33]) == 0:
+            await log(33, command, guild)
             lookup = command.split(' ')
             if lookup[0] != '$dscores' or len(lookup) != 3:
                 await message.channel.send('For looking up a team\'s detailed scores, type "$dscores", a space, the competition ID, a space, and the team number.')
@@ -718,8 +723,8 @@ async def on_message(message):
                     await message.channel.send('The competition ID or team number is invalid or the detailed scores have not been published yet.')
 
         # topteams
-        elif command.find('$' + COMMANDS[33]) == 0:
-            await log(33, command, guild)
+        elif command.find('$' + COMMANDS[34]) == 0:
+            await log(34, command, guild)
             lookup = command.split(' ')
             ca = False
             if len(lookup) > 1:
@@ -769,8 +774,8 @@ async def on_message(message):
             await message.channel.send(content = None, embed = info)
 
         # highscores
-        elif command.find('$' + COMMANDS[34]) == 0:
-            await log(34, command, guild)
+        elif command.find('$' + COMMANDS[35]) == 0:
+            await log(35, command, guild)
             lookup = command.split(' ')
             ca = False
             if len(lookup) > 1:
@@ -802,22 +807,29 @@ async def on_message(message):
             await message.channel.send(content = None, embed = info)
 
         # sourcecode
-        elif '$' + COMMANDS[35] in command:
-            await log(35, command, guild)
+        elif '$' + COMMANDS[36] in command:
+            await log(36, command, guild)
             await message.channel.send('https://github.com/norcalbotftc/NorCalBot')
 
         # resources
-        elif '$' + COMMANDS[36] in command:
-            await log(36, command, guild)
-            manuals = discord.Embed(title = 'Game Manuals')
-            manuals.add_field(name = 'GM0', value = '[Game Manual 0](https://gm0.org/en/stable/)')
-            manuals.add_field(name = 'GM1 - Traditional', value = '[Game Manual 1 - Traditional](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-1-traditional-events.pdf)')
-            manuals.add_field(name = 'GM1 - Remote', value = '[Game Manual 1 - Remote](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-1-remote-events.pdf)')
-            manuals.add_field(name = 'GM2 - Traditional', value = '[Game Manual 2 - Traditional](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-traditional-events.pdf)')
-            manuals.add_field(name = 'GM2 - Remote', value = '[Game Manual 2 - Remote](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf)')
-            manuals.add_field(name = 'UG Scorer', value = '[Ultimate Goal Scorer App](http://roboavatars.weebly.com/ultimategoalscorer.html)')
-            manuals.add_field(name = 'OpenOdo', value = '[OpenOdometry](https://openodometry.weebly.com/)')
-            await message.channel.send(content = None, embed = manuals)
+        elif '$' + COMMANDS[37] in command:
+            await log(37, command, guild)
+            resources = discord.Embed(title = 'Game Manuals')
+            resources.add_field(name = 'GM0', value = '[Game Manual 0](https://gm0.org/en/stable/)')
+            resources.add_field(name = 'GM1 - Traditional', value = '[Game Manual 1 - Traditional](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-1-traditional-events.pdf)')
+            resources.add_field(name = 'GM1 - Remote', value = '[Game Manual 1 - Remote](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-1-remote-events.pdf)')
+            resources.add_field(name = 'GM2 - Traditional', value = '[Game Manual 2 - Traditional](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-traditional-events.pdf)')
+            resources.add_field(name = 'GM2 - Remote', value = '[Game Manual 2 - Remote](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf)')
+            resources.add_field(name = 'UG Scorer', value = '[Ultimate Goal Scorer App](http://roboavatars.weebly.com/ultimategoalscorer.html)')
+            resources.add_field(name = 'OpenOdo', value = '[OpenOdometry](https://openodometry.weebly.com/)')
+            await message.channel.send(content = None, embed = resources)
+
+        # dm
+        elif '$' + COMMANDS[38] in command:
+            await log(38, command, guild)
+            await message.channel.send('Starting DM with ' + author.mention)
+            dm = await author.create_dm()
+            await dm.send('You requested a DM! Here it is!')
 
 # Run Bot
 client.loop.create_task(update())
