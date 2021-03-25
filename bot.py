@@ -28,6 +28,8 @@ import discord
 from dotenv import load_dotenv
 import os
 from pathlib import Path
+import psycopg2
+from psycopg2.extras import execute_values
 import random
 import re
 import requests
@@ -40,20 +42,22 @@ load_dotenv(dotenv_path = env_path)
 BOT_NAME = os.getenv('BOT_NAME')
 BOT_ID = int(os.getenv('BOT_ID'))
 ADMINS = os.getenv('ADMINS').split(',')
+ADMIN_IDS = [int(id) for id in os.getenv('ADMIN_IDS').split(',')]
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 API_CREDENTIALS = os.getenv('API_CREDENTIALS')
 TEST_GUILD = int(os.getenv('TEST_GUILD'))
 TEST_CHANNEL = int(os.getenv('TEST_CHANNEL'))
+DB_URL = os.getenv('DATABASE_URL')
 
 # Commands
-COMMANDS = ('help', 'about', 'ping', 'version', 'moo', 'monke', 'laff', 'joos', 'bts', 'osas', 'kwaza', 'bigshaq', 'asznee', 'frydae', 'wednesdae', 'beteor', 'leek', 'sad', 'comrade', 'veriguds', 'veribads', 'sus', 'setcounters', 'stats', 'tlookup', 'clookup', 'comps', 'advancement', 'qual', 'fairplay', 'rankings', 'awards', 'scores', 'dscores', 'topteams', 'highscores', 'sourcecode', 'resources', 'dm', 'special')
-HELP_COMMANDS = ('$' + COMMANDS[0], '$' + COMMANDS[1], '$' + COMMANDS[2], '$' + COMMANDS[3], '$' + COMMANDS[23], '$' + COMMANDS[24] + ' [team number]', '$' + COMMANDS[25] + ' [competition id]', '$' + COMMANDS[26], '$' + COMMANDS[27], '$' + COMMANDS[28], '$' + COMMANDS[29], '$' + COMMANDS[30] + ' [competition id]', '$' + COMMANDS[31] + ' [competition id]', '$' + COMMANDS[32] + ' [competition id] [team number]', '$' + COMMANDS[33] + ' [competition id] [team number]', '$' + COMMANDS[34] + ' [region]*', '$' + COMMANDS[35] + ' [region]*', '$' + COMMANDS[36], '$' + COMMANDS[37], '$' + COMMANDS[38])
-HELP_MESSAGES = ('Shows this help message', 'Shows credits', 'To make sure the bot is running', 'Shows bot version', 'Shows the counters for each command', 'Shows the competitions for the registered team', 'Shows the registered teams for the specified competition', 'Shows all of the competition codes', 'Shows the advancement order for the specified competition', 'Shows a list of all teams qualified to NorCal Regionals', 'Shows a list of all of the fair play teams', 'Shows the rankings at a competition', 'Shows the award winners at a competition', 'Shows a team\'s scores at a competition', 'Shows a detailed breakdown of a team\'s scores at a competition', 'Shows top 15 teams in specified region', 'Shows top 10 scores in specified region', 'Shows the source code for this bot', 'Shows links for FTC resources', 'Start DM with User')
+COMMANDS = ('help', 'about', 'ping', 'version', 'moo', 'monke', 'laff', 'joos', 'bts', 'osas', 'kwaza', 'bigshaq', 'asznee', 'frydae', 'wednesdae', 'beteor', 'leek', 'sad', 'comrade', 'veriguds', 'veribads', 'sus', 'setcounters', 'stats', 'tlookup', 'clookup', 'comps', 'advancement', 'qual', 'fairplay', 'rankings', 'awards', 'scores', 'dscores', 'topteams', 'highscores', 'sourcecode', 'resources', 'dm', 'suggest', 'special')
+HELP_COMMANDS = ('$' + COMMANDS[0], '$' + COMMANDS[1], '$' + COMMANDS[2], '$' + COMMANDS[3], '$' + COMMANDS[23], '$' + COMMANDS[24] + ' [team number]', '$' + COMMANDS[25] + ' [competition id]', '$' + COMMANDS[26], '$' + COMMANDS[27], '$' + COMMANDS[28], '$' + COMMANDS[29], '$' + COMMANDS[30] + ' [competition id]', '$' + COMMANDS[31] + ' [competition id]', '$' + COMMANDS[32] + ' [competition id] [team number]', '$' + COMMANDS[33] + ' [competition id] [team number]', '$' + COMMANDS[34] + ' [region]*', '$' + COMMANDS[35] + ' [region]*', '$' + COMMANDS[36], '$' + COMMANDS[37], '$' + COMMANDS[38], '$' + COMMANDS[39])
+HELP_MESSAGES = ('Shows this help message', 'Shows credits', 'To make sure the bot is running', 'Shows bot version', 'Shows the counters for each command', 'Shows the competitions for the registered team', 'Shows the registered teams for the specified competition', 'Shows all of the competition codes', 'Shows the advancement order for the specified competition', 'Shows a list of all teams qualified to NorCal Regionals', 'Shows a list of all of the fair play teams', 'Shows the rankings at a competition', 'Shows the award winners at a competition', 'Shows a team\'s scores at a competition', 'Shows a detailed breakdown of a team\'s scores at a competition', 'Shows top 15 teams in specified region', 'Shows top 10 scores in specified region', 'Shows the source code for this bot', 'Shows links for FTC resources', 'Start DM with User', 'Send a command suggestion or a bug report')
 NUM_COMMANDS = len(COMMANDS)
 
 # FIRST API
 API_CODES = {'SCRIM': 'USCANSAQT1', 'GOOG': 'USCANSAQT2', 'FMT4': 'USCANFRQT4', 'DALY': 'USCANDCQT1', 'FMT1': 'USCANFRQT1', 'FMT2': 'USCANFRQT2', 'SJ2': 'USCANSJQT2', 'PIE': 'USCANSAQT3', 'SC': 'USCANFRQT3', 'GB': 'USCANGBQT1', 'CUP': 'USCANCUQT1', 'SJ1': 'USCANSJCT1', 'SAC': 'USCANSAQT4', 'SANM': 'USCANSMQT1', 'Regional': 'USCANSJCT'}
-API_AUTH = {'Authorization': 'Basic ' + base64.b64encode(API_CREDENTIALS.encode('ascii')).decode("ascii")}
+API_AUTH = {'Authorization': 'Basic ' + base64.b64encode(API_CREDENTIALS.encode('ascii')).decode('ascii')}
 
 # Competition Data
 COMP_NAMES = {'GOOG': 'Google', 'FMT4': 'Fremont #4', 'DALY': 'Daly City', 'FMT1': 'Fremont #1', 'FMT2': 'Fremont #2', 'SJ2': 'San Jose #2', 'PIE': 'Piedmont', 'SC': 'Santa Clara', 'GB': 'Granite Bay', 'CUP': 'Cupertino', 'SJ1': 'San Jose #1', 'SAC': 'Sacramento', 'SANM': 'San Mateo'}
@@ -67,16 +71,16 @@ SAFARI = ('537.1', '537.36', '604.1')
 
 # Data
 counter = {command: 0 for command in COMMANDS}
-teams = {524: ['GOOG', 'DALY', 'PIE', 'Boss Bots'], 596: ['N/A', 'N/A', 'N/A', 'SpectreBots'], 669: ['N/A', 'N/A', 'N/A', 'Milpitas Xtreme Robotics'], 3470: ['DALY', 'SAC', 'N/A', 'The Patriots'], 3873: ['N/A', 'N/A', 'N/A', 'Scotbotics'], 4345: ['FMT1', 'FMT4', 'N/A', 'Aragon Robotics'], 4475: ['SANM', 'N/A', 'N/A', 'Purple Reign'], 4950: ['SAC', 'N/A', 'N/A', 'Tino 49ers'], 4998: ['FMT1', 'N/A', 'N/A', 'SPQR - Sen?tus Populusque R?boticus'], 5206: ['CUP', 'SANM', 'N/A', 'The Knights of Ni'], 5214: ['N/A', 'N/A', 'N/A', 'QLS Tech Support'], 5773: ['FMT2', 'CUP', 'N/A', 'Ink and Metal'], 6038: ['SAC', 'N/A', 'N/A', 'Tino Techformers'], 6165: ['GOOG', 'FMT4', 'N/A', 'MSET CuttleFish'], 6949: ['FMT1', 'SC', 'N/A', 'Einstein Eagles'], 7128: ['SAC', 'N/A', 'N/A', '28 Karat'], 7303: ['FMT1', 'GB', 'N/A', 'RoboAvatars'], 7316: ['SANM', 'N/A', 'N/A', 'Iron Panthers'], 7390: ['FMT1', 'CUP', 'N/A', 'MSET JellyFish'], 7593: ['N/A', 'N/A', 'N/A', 'TigerBots'], 7610: ['SANM', 'N/A', 'N/A', 'Tino Frontier'], 7641: ['DALY', 'GB', 'N/A', 'MSET BettaFish'], 7854: ['GOOG', 'FMT1', 'N/A', 'MidKnight Madness'], 8367: ['FMT1', 'SC', 'N/A', 'ACME Robotics'], 8375: ['GOOG', 'DALY', 'N/A', 'Vulcan Robotics'], 8381: ['DALY', 'SC', 'N/A', 'M'], 8404: ['DALY', 'FMT2', 'DROPPED', 'Quixilver'], 8872: ['FMT1', 'GB', 'N/A', 'Robopocalypse'], 9578: ['SJ1', 'N/A', 'N/A', 'Purple Pi'], 9614: ['FMT4', 'SAC', 'N/A', 'Hyperion'], 9656: ['FMT4', 'N/A', 'N/A', 'Omega'], 9657: ['DROPPED', 'DALY', 'SC', 'Athena Robotics'], 9784: ['GOOG', 'DALY', 'N/A', 'Dry Ice'], 10023: ['N/A', 'N/A', 'N/A', 'GatorBots'], 10163: ['N/A', 'N/A', 'N/A', 'Axes of Revolution'], 11039: ['GOOG', 'FMT1', 'N/A', 'Innov8rz'], 11099: ['N/A', 'N/A', 'N/A', 'Tacobots'], 11201: ['FMT2', 'GB', 'N/A', 'Piedmont Pioneers'], 11311: ['GB', 'SJ1', 'N/A', 'Paragon'], 11466: ['SANM', 'N/A', 'N/A', 'Tinosaurus'], 11467: ['SANM', 'N/A', 'N/A', 'Audacious Pioneers'], 11475: ['FMT2', 'CUP', 'N/A', 'Teravoltz'], 11575: ['FMT2', 'CUP', 'N/A', 'Robust Robots'], 11689: ['PIE', 'SJ1', 'N/A', 'We Love Pi'], 12516: ['N/A', 'N/A', 'N/A', 'TBD'], 12628: ['N/A', 'N/A', 'N/A', 'Fremont Hawk'], 12635: ['GOOG', 'N/A', 'N/A', 'Kuriosity Robotics'], 12804: ['SAC', 'N/A', 'N/A', 'LED'], 12869: ['FMT1', 'PIE', 'N/A', 'Voyager 6+'], 12962: ['GOOG', 'FMT2', 'N/A', 'Zenith'], 13035: ['SC', 'N/A', 'N/A', 'Boundless Robotics'], 13050: ['PIE', 'CUP', 'N/A', 'SharkBytes'], 13180: ['FMT4', 'SC', 'N/A', 'Roverdrive'], 13217: ['FMT2', 'SANM', 'N/A', 'AstroBruins'], 13218: ['SC', 'N/A', 'N/A', 'Taro'], 13223: ['GOOG', 'SAC', 'N/A', 'Endgame'], 13274: ['DALY', 'SJ1', 'N/A', 'Longhorn Robotics'], 13345: ['GOOG', 'DALY', 'GB', 'Polaris'], 13356: ['FMT4', 'FMT1', 'N/A', 'RoboForce'], 13380: ['FMT1', 'SANM', 'N/A', 'Quantum Stinger'], 14078: ['SANM', 'SJ1', 'N/A', 'Mechanical Lemons'], 14162: ['GOOG', 'FMT1', 'N/A', 'Bots&amp;Bytes'], 14214: ['FMT1', 'PIE', 'N/A', 'NvyUs'], 14259: ['DALY', 'SAC', 'N/A', 'TURB? V8'], 14298: ['SAC', 'N/A', 'N/A', 'Lincoln Robotics'], 14300: ['FMT1', 'SC', 'N/A', 'Animatronics'], 14318: ['GOOG', 'PIE', 'N/A', 'BioBots'], 14341: ['DROPPED', 'FMT2', 'N/A', 'Hypercube Robotics'], 14473: ['FMT4', 'SAC', 'N/A', 'Future'], 14502: ['FMT1', 'N/A', 'N/A', 'Chocolate Cyborgs'], 14504: ['DALY', 'CUP', 'N/A', 'SerenityNow!'], 14525: ['GOOG', 'SANM', 'N/A', 'TerraBats'], 14663: ['DALY', 'PIE', 'N/A', 'Killabytez'], 14784: ['GOOG', 'SJ1', 'N/A', 'Robotic Rampage'], 14969: ['GOOG', 'FMT2', 'N/A', 'Vortex'], 15068: ['SC', 'N/A', 'N/A', 'Blood Type Zeta'], 15385: ['GOOG', 'DALY', 'N/A', 'MidKnight Mayhem'], 15453: ['SAC', 'N/A', 'N/A', 'RaiderBots'], 16026: ['FMT2', 'GB', 'N/A', 'Alphabots'], 16177: ['FMT1', 'CUP', 'N/A', 'Acmatic'], 16194: ['SC', 'N/A', 'N/A', 'Roses &amp; Rivets'], 16197: ['CUP', 'SC', 'N/A', 'SWARM'], 16236: ['SC', 'CUP', 'N/A', 'Juice'], 16247: ['N/A', 'N/A', 'N/A', 'Thor Bots'], 16278: ['SJ1', 'N/A', 'N/A', 'Wookie Patrol'], 16306: ['GB', 'SANM', 'N/A', 'Incognito'], 16481: ['SANM', 'N/A', 'N/A', 'Robo racers'], 16532: ['N/A', 'N/A', 'N/A', 'Sparkbots'], 16533: ['N/A', 'N/A', 'N/A', 'Infernobots'], 16535: ['FMT2', 'CUP', 'N/A', 'LEGIT'], 16561: ['N/A', 'N/A', 'N/A', 'Navigators'], 16594: ['FMT2', 'SANM', 'N/A', 'Hyper Geek Turtles'], 16656: ['DALY', 'CUP', 'N/A', 'Thunderbots'], 16688: ['N/A', 'N/A', 'N/A', 'Wolfbotics'], 16689: ['N/A', 'N/A', 'N/A', 'Team Yantra'], 16778: ['FMT1', 'N/A', 'N/A', 'Cyber Wizards'], 16898: ['PIE', 'N/A', 'N/A', 'Poseidon'], 16944: ['FMT2', 'N/A', 'N/A', 'FM493RS'], 17099: ['DALY', 'FMT1', 'SC', 'NaH Robotics'], 17390: ['FMT4', 'N/A', 'N/A', 'TechnoG.O.A.Ts'], 17488: ['N/A', 'N/A', 'N/A', 'Firebotics'], 17571: ['DROPPED', 'CUP', 'N/A', 'Quantum Leapers'], 17759: ['FMT2', 'N/A', 'N/A', 'Mind'], 18023: ['N/A', 'N/A', 'N/A', 'South Tahoe Vikings Robotics'], 18096: ['GOOG', 'N/A', 'N/A', 'PizzaBots1'], 18133: ['FMT2', 'N/A', 'N/A', 'CyberCats'], 18134: ['GB', 'SJ1', 'N/A', 'Arkatron'], 18143: ['SANM', 'N/A', 'N/A', 'Brainy Probotics'], 18203: ['N/A', 'N/A', 'N/A', 'MCII'], 18219: ['GB', 'N/A', 'N/A', 'Primitive Data'], 18223: ['N/A', 'N/A', 'N/A', 'EmberBots'], 18233: ['SJ1', 'N/A', 'N/A', 'M.E.R.C.Y.B.'], 18247: ['DALY', 'N/A', 'N/A', 'Gilded Gears'], 18254: ['GOOG', 'FMT1', 'PIE', 'The Inzain Bots'], 18271: ['N/A', 'N/A', 'N/A', 'BPC RoBawks'], 18272: ['DALY', 'CUP', 'SC', 'Sigma'], 18307: ['SC', 'FMT4', 'N/A', 'Robo Stars'], 18309: ['FMT2', 'CUP', 'N/A', 'Dream Machines'], 18311: ['FMT4', 'SC', 'N/A', 'Icon Maniacs'], 18320: ['N/A', 'N/A', 'N/A', 'Plus Ultra 3'], 18321: ['N/A', 'N/A', 'N/A', 'Plus Ultra'], 18322: ['N/A', 'N/A', 'N/A', 'Plus Ultra 5'], 18323: ['N/A', 'N/A', 'N/A', 'Plus Ultra 4'], 18324: ['N/A', 'N/A', 'N/A', 'Plus Ultra 2'], 18325: ['N/A', 'N/A', 'N/A', 'Plus Ultra 6'], 18326: ['N/A', 'N/A', 'N/A', 'Tech-DREAMS FTC'], 18337: ['N/A', 'N/A', 'N/A', 'Artisans'], 18340: ['GB', 'N/A', 'N/A', 'Polaris Robotics'], 18343: ['N/A', 'N/A', 'N/A', 'Chartwell FTC 3'], 18344: ['N/A', 'N/A', 'N/A', 'Chartwell FTC 2'], 18345: ['N/A', 'N/A', 'N/A', 'Chartwell FTC 1'], 18346: ['FMT2', 'CUP', 'N/A', 'AA Batteries'], 18371: ['N/A', 'N/A', 'N/A', 'Wolf Pack'], 18373: ['SANM', 'N/A', 'N/A', 'Blizzard Robotics'], 18412: ['SJ1', 'N/A', 'N/A', 'OtterPups'], 18413: ['SJ1', 'N/A', 'N/A', 'SealPups'], 18451: ['SAC', 'N/A', 'N/A', 'Bots of Thunder'], 18466: ['N/A', 'N/A', 'N/A', 'Mastermindz'], 18481: ['N/A', 'N/A', 'N/A', 'CAF Robotics'], 18490: ['SANM', 'N/A', 'N/A', 'Green Machine'], 18504: ['GB', 'SAC', 'N/A', 'MAGIC BOTS'], 18510: ['N/A', 'N/A', 'N/A', 'MH Plus Ultra'], 18513: ['DALY', 'SAC', 'N/A', 'Gear Toes'], 18536: ['N/A', 'N/A', 'N/A', 'Robodores FTC'], 18563: ['N/A', 'N/A', 'N/A', 'Landslide'], 18564: ['DALY', 'PIE', 'FMT2', 'Techbots'], 18569: ['FMT2', 'SJ1', 'N/A', 'Seal Team Schicks'], 18604: ['N/A', 'N/A', 'N/A', 'Robo R0ckstars'], 18712: ['N/A', 'N/A', 'N/A', 'Impact Robotics'], 18715: ['GB', 'SJ1', 'N/A', 'Artemis'], 18726: ['PIE', 'SJ1', 'N/A', 'Ninjabots'], 18729: ['FMT2', 'N/A', 'N/A', 'TeamFirst-FTC'], 18756: ['SAC', 'N/A', 'N/A', 'FTC Horner Team 4'], 18767: ['SJ1', 'SAC', 'N/A', 'The Techarinos'], 18786: ['FMT1', 'GB', 'N/A', 'Liverbots'], 18788: ['N/A', 'N/A', 'N/A', 'ZeusTech'], 18837: ['N/A', 'N/A', 'N/A', 'Kronos'], 18897: ['PIE', 'N/A', 'N/A', 'Raider Robotics'], 17252: ['SJ1', 'N/A', 'N/A', 'HT7']}
-comps = {'DALY': [524, 3470, 7641, 8375, 8381, 8404, 9657, 9784, 13274, 13345, 14259, 14504, 14663, 15385, 16656, 17099, 18247, 18272, 18513, 18564], 'GOOG': [524, 6165, 7854, 8375, 9784, 11039, 12635, 12962, 13223, 13345, 14162, 14318, 14525, 14784, 14969, 15385, 18096, 18254], 'SJ1': [9578, 11311, 11689, 13274, 14078, 14784, 16278, 18134, 18233, 18412, 18413, 18569, 18715, 18726, 18767, 17252], 'FMT1': [4345, 4998, 6949, 7303, 7390, 7854, 8367, 8872, 11039, 12869, 13356, 13380, 14162, 14214, 14300, 14502, 16177, 16778, 17099, 18254, 18786], 'SC': [6949, 8367, 8381, 9657, 13035, 13180, 13218, 14300, 15068, 16194, 16197, 16236, 17099, 18272, 18307, 18311], 'CUP': [5206, 5773, 7390, 11475, 11575, 13050, 14504, 16177, 16197, 16236, 16535, 16656, 17571, 18272, 18309, 18346], 'FMT2': [5773, 8404, 11201, 11475, 11575, 12962, 13217, 14341, 14969, 16026, 16535, 16594, 16944, 17759, 18133, 18309, 18346, 18564, 18569, 18729], 'PIE': [524, 11689, 12869, 13050, 14214, 14318, 14663, 16898, 18254, 18564, 18726, 18897], 'GB': [7303, 7641, 8872, 11201, 11311, 13345, 16026, 16306, 18134, 18219, 18340, 18504, 18715, 18786], 'SAC': [3470, 4950, 6038, 7128, 9614, 12804, 13223, 14259, 14298, 14473, 15453, 18451, 18504, 18513, 18756, 18767], 'SANM': [4475, 5206, 7316, 7610, 11466, 11467, 13217, 13380, 14078, 14525, 16306, 16481, 16594, 18143, 18373, 18490], 'FMT4': [4345, 6165, 9614, 9656, 13180, 13356, 14473, 17390, 18307, 18311]}
-fairplay = [524, 4345, 4950, 4998, 5206, 5773, 6038, 6165, 6448, 6949, 7083, 7128, 7303, 7316, 7390, 7610, 7641, 7854, 8300, 8367, 8375, 8381, 8404, 8872, 9614, 9656, 9768, 9784, 11039, 11201, 11311, 11466, 11467, 11575, 11689, 12635, 12869, 13107, 13180, 13217, 13218, 13345, 13356, 13380, 14300, 14318, 14341, 14374, 14473, 14504, 14525, 14663, 14969, 15385, 16026, 16072, 16177, 16197, 16236, 16306, 16309, 16532, 16533, 16535, 16594, 16944, 17759, 18183, 18190, 18219, 18223, 18254, 18272, 18309, 18340, 18373, 18466, 18513, 18564]
-advancement = {'GOOG': [14525, 12635, 6165, 8375, '', 11039, 11039, 9784, 13223, 18254, 9784, 13345, 12635, 18254, 8375, 14318, '', 14162, '', 7854], 'FMT4': [6165, 13356, 9656, 13180, 4345, 14473, 9656, 17390, 14473, 18311, 13356, 9614, 4345, 9614, 18307, '', 6165, '', 13180, ''], 'DALY': [8375, 9784, 8381, 8404, 8404, 13345, 8381, 14504, 8404, 14259, 7641, 17099, 9784, 18272, 14259, 18564, 13345, 14663, 9657, 18513], 'FMT1': [11039, 7303, 14300, 13356, 7390, 18254, 14300, 4345, 7854, 14162, 7390, 13380, 7303, 13380, 13356, 12869, 8872, 17099, 8367, 16778], 'FMT2': [14341, 17759, 13217, 5773, 8404, 16535, 11475, 11201, 13217, 18346, 14969, 11575, 8404, 5773, 11575, 16944, 16944, 18564, 14341, 18729], 'PIE': [12869, 18254, 14663, 16898, 11689, 14214, 524, 14318, 14318, 18564, 11689, 18726, 14214, 16898, 14663, '', 13050, '', 13050, ''], 'SC': [], 'GB': [], 'CUP': [], 'SJ1': [], 'SAC': [], 'SANM': []}
-qualified = {'GOOG': [14525, 12635, 6165], 'FMT4': [13356], 'DALY': [8375, 9784, 8381], 'FMT1': [11039, 7303, 14300, 7390], 'FMT2': [14341, 17759, 13217], 'PIE': [12869, 18254], 'SC': [], 'GB': [], 'CUP': [], 'SJ1': [], 'SAC': [], 'SANM': []}
+teams = {524: ['GOOG', 'DALY', 'PIE', 'Boss Bots'], 596: ['N/A', 'N/A', 'N/A', 'SpectreBots'], 669: ['N/A', 'N/A', 'N/A', 'Milpitas Xtreme Robotics'], 3470: ['DALY', 'SAC', 'N/A', 'The Patriots'], 3873: ['N/A', 'N/A', 'N/A', 'Scotbotics'], 4345: ['FMT1', 'FMT4', 'CUP', 'Aragon Robotics'], 4475: ['SANM', 'N/A', 'N/A', 'Purple Reign'], 4950: ['SAC', 'N/A', 'N/A', 'Tino 49ers'], 4998: ['FMT1', 'N/A', 'N/A', 'SPQR - Sen?tus Populusque R?boticus'], 5206: ['CUP', 'SANM', 'N/A', 'The Knights of Ni'], 5214: ['N/A', 'N/A', 'N/A', 'QLS Tech Support'], 5773: ['FMT2', 'CUP', 'N/A', 'Ink and Metal'], 6038: ['SAC', 'N/A', 'N/A', 'Tino Techformers'], 6165: ['GOOG', 'FMT4', 'N/A', 'MSET CuttleFish'], 6949: ['FMT1', 'SC', 'N/A', 'Einstein Eagles'], 7128: ['SAC', 'N/A', 'N/A', '28 Karat'], 7303: ['FMT1', 'GB', 'N/A', 'RoboAvatars'], 7316: ['SANM', 'N/A', 'N/A', 'Iron Panthers'], 7390: ['FMT1', 'CUP', 'N/A', 'MSET JellyFish'], 7593: ['N/A', 'N/A', 'N/A', 'TigerBots'], 7610: ['SANM', 'N/A', 'N/A', 'Tino Frontier'], 7641: ['DALY', 'GB', 'N/A', 'MSET BettaFish'], 7854: ['GOOG', 'FMT1', 'N/A', 'MidKnight Madness'], 8367: ['FMT1', 'SC', 'CUP', 'ACME Robotics'], 8375: ['GOOG', 'DALY', 'N/A', 'Vulcan Robotics'], 8381: ['DALY', 'SC', 'N/A', 'M'], 8404: ['DALY', 'FMT2', 'DROPPED', 'Quixilver'], 8872: ['FMT1', 'GB', 'N/A', 'Robopocalypse'], 9578: ['SJ1', 'N/A', 'N/A', 'Purple Pi'], 9614: ['FMT4', 'SAC', 'N/A', 'Hyperion'], 9656: ['FMT4', 'N/A', 'N/A', 'Omega'], 9657: ['DROPPED', 'DALY', 'SC', 'Athena Robotics'], 9784: ['GOOG', 'DALY', 'N/A', 'Dry Ice'], 10023: ['N/A', 'N/A', 'N/A', 'GatorBots'], 10163: ['N/A', 'N/A', 'N/A', 'Axes of Revolution'], 11039: ['GOOG', 'FMT1', 'N/A', 'Innov8rz'], 11099: ['N/A', 'N/A', 'N/A', 'Tacobots'], 11201: ['FMT2', 'GB', 'N/A', 'Piedmont Pioneers'], 11311: ['GB', 'SJ1', 'N/A', 'Paragon'], 11466: ['SANM', 'N/A', 'N/A', 'Tinosaurus'], 11467: ['SANM', 'N/A', 'N/A', 'Audacious Pioneers'], 11475: ['FMT2', 'CUP', 'N/A', 'Teravoltz'], 11575: ['FMT2', 'CUP', 'N/A', 'Robust Robots'], 11689: ['PIE', 'SJ1', 'CUP', 'We Love Pi'], 12516: ['N/A', 'N/A', 'N/A', 'TBD'], 12628: ['N/A', 'N/A', 'N/A', 'Fremont Hawk'], 12635: ['GOOG', 'N/A', 'N/A', 'Kuriosity Robotics'], 12804: ['SAC', 'N/A', 'N/A', 'LED'], 12869: ['FMT1', 'PIE', 'N/A', 'Voyager 6+'], 12962: ['GOOG', 'FMT2', 'N/A', 'Zenith'], 13035: ['SC', 'N/A', 'N/A', 'Boundless Robotics'], 13050: ['PIE', 'CUP', 'N/A', 'SharkBytes'], 13180: ['FMT4', 'SC', 'N/A', 'Roverdrive'], 13217: ['FMT2', 'SANM', 'N/A', 'AstroBruins'], 13218: ['SC', 'N/A', 'N/A', 'Taro'], 13223: ['GOOG', 'SAC', 'N/A', 'Endgame'], 13274: ['DALY', 'SJ1', 'N/A', 'Longhorn Robotics'], 13345: ['GOOG', 'DALY', 'GB', 'Polaris'], 13356: ['FMT4', 'FMT1', 'N/A', 'RoboForce'], 13380: ['FMT1', 'SANM', 'N/A', 'Quantum Stinger'], 14078: ['SANM', 'SJ1', 'N/A', 'Mechanical Lemons'], 14162: ['GOOG', 'FMT1', 'N/A', 'Bots&amp;Bytes'], 14214: ['FMT1', 'PIE', 'CUP', 'NvyUs'], 14259: ['DALY', 'SAC', 'N/A', 'TURB? V8'], 14298: ['SAC', 'N/A', 'N/A', 'Lincoln Robotics'], 14300: ['FMT1', 'SC', 'N/A', 'Animatronics'], 14318: ['GOOG', 'PIE', 'N/A', 'BioBots'], 14341: ['DROPPED', 'FMT2', 'N/A', 'Hypercube Robotics'], 14473: ['FMT4', 'SAC', 'N/A', 'Future'], 14502: ['FMT1', 'N/A', 'N/A', 'Chocolate Cyborgs'], 14504: ['DALY', 'CUP', 'N/A', 'SerenityNow!'], 14525: ['GOOG', 'SANM', 'N/A', 'TerraBats'], 14663: ['DALY', 'PIE', 'N/A', 'Killabytez'], 14784: ['GOOG', 'SJ1', 'N/A', 'Robotic Rampage'], 14969: ['GOOG', 'FMT2', 'N/A', 'Vortex'], 15068: ['SC', 'N/A', 'N/A', 'Blood Type Zeta'], 15385: ['GOOG', 'DALY', 'N/A', 'MidKnight Mayhem'], 15453: ['SAC', 'N/A', 'N/A', 'RaiderBots'], 16026: ['FMT2', 'GB', 'N/A', 'Alphabots'], 16177: ['FMT1', 'CUP', 'N/A', 'Acmatic'], 16194: ['SC', 'N/A', 'N/A', 'Roses &amp; Rivets'], 16197: ['CUP', 'SC', 'N/A', 'SWARM'], 16236: ['SC', 'CUP', 'N/A', 'Juice'], 16247: ['N/A', 'N/A', 'N/A', 'Thor Bots'], 16278: ['SJ1', 'N/A', 'N/A', 'Wookie Patrol'], 16306: ['GB', 'SANM', 'N/A', 'Incognito'], 16481: ['SANM', 'N/A', 'N/A', 'Robo racers'], 16532: ['N/A', 'N/A', 'N/A', 'Sparkbots'], 16533: ['N/A', 'N/A', 'N/A', 'Infernobots'], 16535: ['FMT2', 'CUP', 'N/A', 'LEGIT'], 16561: ['N/A', 'N/A', 'N/A', 'Navigators'], 16594: ['FMT2', 'SANM', 'N/A', 'Hyper Geek Turtles'], 16656: ['DALY', 'CUP', 'N/A', 'Thunderbots'], 16688: ['N/A', 'N/A', 'N/A', 'Wolfbotics'], 16689: ['N/A', 'N/A', 'N/A', 'Team Yantra'], 16778: ['FMT1', 'N/A', 'N/A', 'Cyber Wizards'], 16898: ['PIE', 'CUP', 'N/A', 'Poseidon'], 16944: ['FMT2', 'N/A', 'N/A', 'FM493RS'], 17099: ['DALY', 'FMT1', 'SC', 'NaH Robotics'], 17390: ['FMT4', 'N/A', 'N/A', 'TechnoG.O.A.Ts'], 17488: ['N/A', 'N/A', 'N/A', 'Firebotics'], 17571: ['DROPPED', 'CUP', 'N/A', 'Quantum Leapers'], 17759: ['FMT2', 'N/A', 'N/A', 'Mind'], 18023: ['N/A', 'N/A', 'N/A', 'South Tahoe Vikings Robotics'], 18096: ['GOOG', 'N/A', 'N/A', 'PizzaBots1'], 18133: ['FMT2', 'N/A', 'N/A', 'CyberCats'], 18134: ['GB', 'SJ1', 'N/A', 'Arkatron'], 18143: ['SANM', 'N/A', 'N/A', 'Brainy Probotics'], 18203: ['N/A', 'N/A', 'N/A', 'MCII'], 18219: ['GB', 'N/A', 'N/A', 'Primitive Data'], 18223: ['N/A', 'N/A', 'N/A', 'EmberBots'], 18233: ['SJ1', 'N/A', 'N/A', 'M.E.R.C.Y.B.'], 18247: ['DALY', 'N/A', 'N/A', 'Gilded Gears'], 18254: ['GOOG', 'FMT1', 'PIE', 'The Inzain Bots'], 18271: ['N/A', 'N/A', 'N/A', 'BPC RoBawks'], 18272: ['DALY', 'CUP', 'SC', 'Sigma'], 18307: ['SC', 'FMT4', 'N/A', 'Robo Stars'], 18309: ['FMT2', 'CUP', 'N/A', 'Dream Machines'], 18311: ['FMT4', 'SC', 'N/A', 'Icon Maniacs'], 18320: ['N/A', 'N/A', 'N/A', 'Plus Ultra 3'], 18321: ['N/A', 'N/A', 'N/A', 'Plus Ultra'], 18322: ['N/A', 'N/A', 'N/A', 'Plus Ultra 5'], 18323: ['N/A', 'N/A', 'N/A', 'Plus Ultra 4'], 18324: ['N/A', 'N/A', 'N/A', 'Plus Ultra 2'], 18325: ['N/A', 'N/A', 'N/A', 'Plus Ultra 6'], 18326: ['N/A', 'N/A', 'N/A', 'Tech-DREAMS FTC'], 18337: ['N/A', 'N/A', 'N/A', 'Artisans'], 18340: ['GB', 'N/A', 'N/A', 'Polaris Robotics'], 18343: ['N/A', 'N/A', 'N/A', 'Chartwell FTC 3'], 18344: ['N/A', 'N/A', 'N/A', 'Chartwell FTC 2'], 18345: ['N/A', 'N/A', 'N/A', 'Chartwell FTC 1'], 18346: ['FMT2', 'CUP', 'N/A', 'AA Batteries'], 18371: ['N/A', 'N/A', 'N/A', 'Wolf Pack'], 18373: ['SANM', 'N/A', 'N/A', 'Blizzard Robotics'], 18412: ['SJ1', 'N/A', 'N/A', 'OtterPups'], 18413: ['SJ1', 'N/A', 'N/A', 'SealPups'], 18451: ['SAC', 'N/A', 'N/A', 'Bots of Thunder'], 18466: ['N/A', 'N/A', 'N/A', 'Mastermindz'], 18481: ['N/A', 'N/A', 'N/A', 'CAF Robotics'], 18490: ['SANM', 'N/A', 'N/A', 'Green Machine'], 18504: ['GB', 'SAC', 'N/A', 'MAGIC BOTS'], 18510: ['N/A', 'N/A', 'N/A', 'MH Plus Ultra'], 18513: ['DALY', 'SAC', 'N/A', 'Gear Toes'], 18536: ['N/A', 'N/A', 'N/A', 'Robodores FTC'], 18563: ['N/A', 'N/A', 'N/A', 'Landslide'], 18564: ['DALY', 'PIE', 'FMT2', 'Techbots'], 18569: ['FMT2', 'SJ1', 'N/A', 'Seal Team Schicks'], 18604: ['N/A', 'N/A', 'N/A', 'Robo R0ckstars'], 18712: ['N/A', 'N/A', 'N/A', 'Impact Robotics'], 18715: ['GB', 'SJ1', 'CUP', 'Artemis'], 18726: ['PIE', 'SJ1', 'N/A', 'Ninjabots'], 18729: ['FMT2', 'N/A', 'N/A', 'TeamFirst-FTC'], 18756: ['SAC', 'N/A', 'N/A', 'FTC Horner Team 4'], 18767: ['SJ1', 'SAC', 'N/A', 'The Techarinos'], 18786: ['FMT1', 'GB', 'N/A', 'Liverbots'], 18788: ['N/A', 'N/A', 'N/A', 'ZeusTech'], 18837: ['N/A', 'N/A', 'N/A', 'Kronos'], 18897: ['PIE', 'CUP', 'N/A', 'Raider Robotics'], 17252: ['SJ1', 'N/A', 'N/A', 'HT7']}
+comps = {'FMT2': [5773, 8404, 11201, 11475, 11575, 12962, 13217, 14341, 14969, 16026, 16535, 16594, 16944, 17759, 18133, 18309, 18346, 18564, 18569, 18729], 'FMT4': [4345, 6165, 9614, 9656, 13180, 13356, 14473, 17390, 18307, 18311], 'CUP': [4345, 5206, 5773, 7390, 8367, 11475, 11575, 11689, 13050, 14214, 14504, 16177, 16197, 16236, 16535, 16656, 16898, 17571, 18272, 18309, 18346, 18715, 18897], 'GOOG': [524, 6165, 7854, 8375, 9784, 11039, 12635, 12962, 13223, 13345, 14162, 14318, 14525, 14784, 14969, 15385, 18096, 18254], 'FMT1': [4345, 4998, 6949, 7303, 7390, 7854, 8367, 8872, 11039, 12869, 13356, 13380, 14162, 14214, 14300, 14502, 16177, 16778, 17099, 18254, 18786], 'SC': [6949, 8367, 8381, 9657, 13035, 13180, 13218, 14300, 15068, 16194, 16197, 16236, 17099, 18272, 18307, 18311], 'SAC': [3470, 4950, 6038, 7128, 9614, 12804, 13223, 14259, 14298, 14473, 15453, 18451, 18504, 18513, 18756, 18767], 'SANM': [4475, 5206, 7316, 7610, 11466, 11467, 13217, 13380, 14078, 14525, 16306, 16481, 16594, 18143, 18373, 18490], 'DALY': [524, 3470, 7641, 8375, 8381, 8404, 9657, 9784, 13274, 13345, 14259, 14504, 14663, 15385, 16656, 17099, 18247, 18272, 18513, 18564], 'GB': [7303, 7641, 8872, 11201, 11311, 13345, 16026, 16306, 18134, 18219, 18340, 18504, 18715, 18786], 'SJ1': [9578, 11311, 11689, 13274, 14078, 14784, 16278, 18134, 18233, 18412, 18413, 18569, 18715, 18726, 18767, 17252], 'PIE': [524, 11689, 12869, 13050, 14214, 14318, 14663, 16898, 18254, 18564, 18726, 18897]}
+fairplay = [524, 4345, 4950, 4998, 5206, 5773, 6038, 6165, 6448, 6949, 7083, 7128, 7303, 7316, 7390, 7610, 7641, 7854, 8300, 8367, 8375, 8381, 8404, 8872, 9614, 9656, 9768, 9784, 11039, 11201, 11311, 11466, 11467, 11575, 11689, 12635, 12869, 13107, 13180, 13217, 13218, 13345, 13356, 13380, 14300, 14318, 14341, 14374, 14473, 14504, 14525, 14663, 14969, 15385, 16026, 16072, 16177, 16197, 16236, 16302, 16306, 16309, 16532, 16533, 16535, 16594, 16944, 17759, 18183, 18190, 18219, 18223, 18254, 18272, 18307, 18309, 18311, 18340, 18373, 18466, 18513, 18564]
+advancement = {'GOOG': [14525, 12635, 6165, 8375, 0, 11039, 11039, 9784, 13223, 18254, 9784, 13345, 12635, 18254, 8375, 14318, 0, 14162, 0, 7854], 'FMT4': [6165, 13356, 9656, 13180, 4345, 14473, 9656, 17390, 14473, 18311, 13356, 9614, 4345, 9614, 18307, 0, 6165, 0, 13180, 0], 'DALY': [8375, 9784, 8381, 8404, 8404, 13345, 8381, 14504, 8404, 14259, 7641, 17099, 9784, 18272, 14259, 18564, 13345, 14663, 9657, 18513], 'FMT1': [11039, 7303, 14300, 13356, 7390, 18254, 14300, 4345, 7854, 14162, 7390, 13380, 7303, 13380, 13356, 12869, 8872, 17099, 8367, 16778], 'FMT2': [14341, 17759, 13217, 5773, 8404, 16535, 11475, 11201, 13217, 18346, 14969, 11575, 8404, 5773, 11575, 16944, 16944, 18564, 14341, 18729], 'PIE': [12869, 18254, 14663, 16898, 11689, 14214, 524, 14318, 14318, 18564, 11689, 18726, 14214, 16898, 14663, 0, 13050, 0, 13050, 0], 'SC': [13180, 8381, 8381, 18311, 8367, 14300, 16236, 17099, 14300, 18272, 8367, 13035, 8381, 13218, 15068, 16197, 9657, 18307, 18307, 6949], 'GB': [18219, 7303, 7303, 13345, 8872, 11201, 11201, 11311, 7303, 18504, 18134, 7641, 7641, 11311, 18340, 18786, 16026, 18504, 16306, 13345], 'CUP': [], 'SJ1': [], 'SAC': [], 'SANM': []}
+qualified = {'GOOG': [14525, 12635, 6165], 'FMT4': [13356], 'DALY': [8375, 9784, 8381], 'FMT1': [11039, 7303, 14300], 'FMT2': [14341, 17759, 13217], 'PIE': [12869, 18254], 'SC': [13180, 18311], 'GB': [18219, 13345], 'CUP': [], 'SJ1': [], 'SAC': [], 'SANM': []}
 slots = ['Inspire, 1st', 'Next Rank', 'Inspire, 2nd', 'Next Rank', 'Inspire, 3rd', 'Next Rank', 'Think, 1st', 'Next Rank', 'Connect, 1st', 'Next Rank', 'Innovate, 1st', 'Next Rank', 'Control, 1st', 'Motivate, 1st', 'Design, 1st', 'Next Rank', 'Think, 2nd', 'Next Rank', 'Connect, 2nd', 'Next Rank']
-qual = [6165, 7303, 7390, 8375, 8381, 9784, 11039, 12635, 12869, 13217, 13356, 14300, 14341, 14525, 17759, 18254]
+qual = [6165, 7303, 8375, 8381, 9784, 11039, 12635, 12869, 13180, 13217, 13345, 13356, 14300, 14341, 14525, 17759, 18219, 18254, 18311]
 
 # Initialize Bot
-VERSION = '2021.3.23.5'
+VERSION = '2021.3.24.9'
 loop_counter = 0
 client = discord.Client()
 
@@ -101,6 +105,42 @@ def lookup_data(number):
     qt = re.compile('QT #\d.*?er">\s*?(\S*?)\s*?</td>', re.DOTALL).findall(html_code)
     name = re.compile('am Name.*?">\s*?(\S.*?)\s*?</td>', re.DOTALL).findall(html_code)[0]
     return [qt[0].upper() if len(qt) >= 1 else 'N/A', qt[1].upper() if len(qt) >= 2 else 'N/A', qt[2].upper() if len(qt) == 3 else 'N/A', name]
+
+def create_db():
+    connection = psycopg2.connect(DB_URL, sslmode = 'require')
+    cursor = connection.cursor()
+
+    cursor.execute('CREATE TABLE teams (id serial NOT NULL PRIMARY KEY, number SMALLINT, info TEXT [])')
+    cursor.execute('CREATE TABLE comps (id serial NOT NULL PRIMARY KEY, comp TEXT, teams SMALLINT [])')
+    cursor.execute('CREATE TABLE advancement (id serial NOT NULL PRIMARY KEY, comp TEXT, teams SMALLINT [])')
+    cursor.execute('CREATE TABLE qualified (id serial NOT NULL PRIMARY KEY, comp TEXT, teams SMALLINT [])')
+    cursor.execute('CREATE TABLE data (id serial NOT NULL PRIMARY KEY, fairplay SMALLINT [], slots TEXT [], qual SMALLINT [])')
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    update_db()
+
+def update_db():
+    connection = psycopg2.connect(DB_URL, sslmode = 'require')
+    cursor = connection.cursor()
+
+    cursor.execute('TRUNCATE TABLE teams')
+    cursor.execute('TRUNCATE TABLE comps')
+    cursor.execute('TRUNCATE TABLE advancement')
+    cursor.execute('TRUNCATE TABLE qualified')
+    cursor.execute('TRUNCATE TABLE data')
+
+    execute_values(cursor, 'INSERT INTO teams (number, info) VALUES %s', [(item[0], list(item[1])) for item in teams.items()], template = '(%s, %s)', page_size = 200)
+    execute_values(cursor, 'INSERT INTO comps (comp, teams) VALUES %s', [(item[0], list(item[1])) for item in comps.items()], template = '(%s, %s)')
+    execute_values(cursor, 'INSERT INTO advancement (comp, teams) VALUES %s', [(item[0], list(item[1])) for item in advancement.items()], template = '(%s, %s)')
+    execute_values(cursor, 'INSERT INTO qualified (comp, teams) VALUES %s', [(item[0], list(item[1])) for item in qualified.items()], template = '(%s, %s)')
+    cursor.execute('INSERT INTO data (fairplay, slots, qual) VALUES (%s, %s, %s)', [fairplay, slots, qual])
+
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 async def update():
     """
@@ -206,9 +246,9 @@ async def update():
                             team = int(re.compile('\D*(\d*)\D*', re.DOTALL).findall(team)[0])
                         advancement[key].append(team)
                     else:
-                        advancement[key].append(int(team) if team != '' else '')
+                        advancement[key].append(int(team) if team != '' else 0)
 
-                    if advancement[key].count('') == num_rows:
+                    if advancement[key].count(0) == num_rows:
                         advancement[key] = []
 
             qual.sort()
@@ -218,7 +258,9 @@ async def update():
             # print(slots)
             # print(qual)
 
-            requests.patch("https://dynamic.jackcrane.rocks/api/ftcstats/fetch.php")
+            requests.patch('https://dynamic.jackcrane.rocks/api/ftcstats/fetch.php')
+
+            update_db()
 
         loop_counter += 1
         await asyncio.sleep(7200)
@@ -246,7 +288,7 @@ async def on_message(message):
     # Save Command
     command = message.content.lower()
     author = message.author
-    guild = message.guild.name if message.guild is not None else (author.mention if author in ADMINS else author.name)
+    guild = message.guild.name if message.guild is not None else (author.name if str(author) in ADMINS else author.mention)
 
     # Run If Bot Did Not Send Command
     if str(author) != BOT_NAME:
@@ -265,7 +307,7 @@ async def on_message(message):
         # about
         elif '$' + COMMANDS[1] in command:
             await log(1, command, guild)
-            await message.channel.send('I was made by Ansh Gandhi and Jonathan Ma from FTC Team 7303 RoboAvatars.\nHere is my source code: https://github.com/norcalbotftc/NorCalBot.\nPlease support them by downloading the RoboAvatars Ultimate Goal Scoring app here: https://tinyurl.com/UltimateGoalRA.')
+            await message.channel.send('I was made by Ansh Gandhi and Jonathan Ma from FTC Team 7303 RoboAvatars.\nMy source code is [here](https://github.com/norcalbotftc/NorCalBot).\nPlease support my creators by downloading the RoboAvatars Ultimate Goal Scoring app [here](https://tinyurl.com/UltimateGoalRA).\nMy data comes from [NorCal FTC](https://www.norcalftc.org), [FIRST API](https://ftc-events.firstinspires.org/services/API), and [FTC Stats API](https://dynamic.jackcrane.rocks/api/ftcstats/docs.php).')
 
         # ping
         elif '$' + COMMANDS[2] in command:
@@ -478,7 +520,7 @@ async def on_message(message):
                     info.add_field(name = 'QT #2', value = data[1])
                     info.add_field(name = 'QT #3', value = data[2])
                     info.add_field(name = 'Fair Play', value = 'Yes' if number in fairplay else 'No')
-                    info.set_footer(text = 'Source: https://www.norcalftc.org/ftc-team-status/?ftcteam=' + str(number))
+                    info.set_footer(text = 'Source: NorCal FTC Team Status ' + str(number) + ' - https://www.norcalftc.org/ftc-team-status/?ftcteam=' + str(number))
                     await message.channel.send(content = None, embed = info)
                 except:
                     await message.channel.send('For looking up a team, type "$tlookup", a space, and then the team number.')
@@ -544,13 +586,14 @@ async def on_message(message):
                     await message.channel.send('The competition ID is invalid or the advancement data has not been published yet.')
                 else:
                     info = discord.Embed(title = id + ' Qualifier Advancement', description = 'The teams that have advanced to NorCal Regionals are marked with a "*". Use $qual to see all of the qualifying teams.')
-                    info.set_footer(text = 'Source: https://www.norcalftc.org/2020-advancement-summary/')
+                    info.set_footer(text = 'Source: NorCal FTC Advancement Summary - https://www.norcalftc.org/2020-advancement-summary/')
 
-                    slot = 0
-                    for team in advancement[id]:
-                        if team != '':
-                            info.add_field(name = str(slot + 1) + ') ' + slots[slot] + ('*' if team in qualified[id] else ''), value = str(team) + ' (' + teams[team][3] + ')')
-                            slot += 1
+                    count = 0
+                    for slot in range(len(advancement[id])):
+                        team = advancement[id][slot]
+                        if team != 0:
+                            info.add_field(name = str(count + 1) + ') ' + slots[slot] + ('*' if team in qualified[id] else ''), value = str(team) + ' (' + teams[team][3] + ')')
+                            count += 1
 
                     await message.channel.send(content = None, embed = info)
 
@@ -565,7 +608,7 @@ async def on_message(message):
                 if team in fairplay:
                     fairplaycount += 1
             info.add_field(name = '% of Teams in Fair Play', value = str(int(fairplaycount / len(qual) * 100)))
-            info.set_footer(text = 'Source: https://www.norcalftc.org/2020-advancement-summary/')
+            info.set_footer(text = 'Source: NorCal FTC Advancement Summary - https://www.norcalftc.org/2020-advancement-summary/')
             overflowcounter = 2
             for index in range(len(qual)):
                 team = qual[index]
@@ -577,7 +620,7 @@ async def on_message(message):
                 if overflowcounter % 25 == 0 and overflowcounter != 0:
                     await message.channel.send(content = None, embed = info)
                     info = discord.Embed(title = 'NorCal Regionals Qualifying Teams (cont)', description = 'This is a list of all of NorCal teams that have qualified for regionals. Teams in fairplay are marked with "*".')
-                    info.set_footer(text = 'Source: https://www.norcalftc.org/2020-advancement-summary/')
+                    info.set_footer(text = 'Source:  NorCal FTC Advancement Summary - https://www.norcalftc.org/2020-advancement-summary/')
             if overflowcounter % 25 != 0 and overflowcounter != 0:
                 await message.channel.send(content = None, embed = info)
 
@@ -587,7 +630,7 @@ async def on_message(message):
             info = discord.Embed(title = 'Fair Play Teams', description = 'A list of all of the fair play teams')
             info.add_field(name = 'Number of Fair Play Teams', value = str(len(fairplay)))
             info.add_field(name = '% of Teams in Fair Play', value = str(int(len(fairplay) / len(teams) * 100)))
-            info.set_footer(text = 'Source: https://www.norcalftc.org/fair-play-team-list/')
+            info.set_footer(text = 'Source: NorCal FTC Fair Play Team List - https://www.norcalftc.org/fair-play-team-list/')
             overflowcounter = 2
             for index in range(len(fairplay)):
                 team = fairplay[index]
@@ -599,7 +642,7 @@ async def on_message(message):
                 if overflowcounter % 25 == 0 and overflowcounter != 0:
                     await message.channel.send(content = None, embed = info)
                     info = discord.Embed(title = 'Fair Play Teams (cont)', description = 'A list of all of the fair play teams')
-                    info.set_footer(text = 'Source: https://www.norcalftc.org/fair-play-team-list/')
+                    info.set_footer(text = 'Source: NorCal FTC Fair Play Team List - https://www.norcalftc.org/fair-play-team-list/')
             if overflowcounter % 25 != 0 and overflowcounter != 0:
                 await message.channel.send(content = None, embed = info)
 
@@ -614,7 +657,7 @@ async def on_message(message):
                     id = lookup[1].upper()
                     code = API_CODES.get(id)
                     info = discord.Embed(title = 'Rankings for ' + id)
-                    info.set_footer(text = 'Data from FIRST API: https://ftc-events.firstinspires.org/services/API')
+                    info.set_footer(text = 'Source: FIRST API - https://ftc-events.firstinspires.org/services/API')
 
                     apiInfo = first_request('rankings/' + code).json().get('Rankings')
                     if len(apiInfo) == 0:
@@ -637,7 +680,7 @@ async def on_message(message):
                     id = lookup[1].upper()
                     code = API_CODES.get(id)
                     info = discord.Embed(title = 'Awards for ' + id)
-                    info.set_footer(text = 'Data from FIRST API: https://ftc-events.firstinspires.org/services/API')
+                    info.set_footer(text = 'Source: FIRST API - https://ftc-events.firstinspires.org/services/API')
 
                     apiInfo = first_request('awards/' + code).json().get('awards')
                     if len(apiInfo) == 0:
@@ -662,7 +705,7 @@ async def on_message(message):
                     team = lookup[2]
                     code = API_CODES.get(id)
                     info = discord.Embed(title = id + ' Scores for ' + teams[int(team)][3], description = 'Use $dscores for detailed score breakdown')
-                    info.set_footer(text = 'Data from FIRST API: https://ftc-events.firstinspires.org/services/API')
+                    info.set_footer(text = 'Source: FIRST API - https://ftc-events.firstinspires.org/services/API')
 
                     apiInfo = first_request('scores/' + code + '/qual?teamnumber=' + team).json().get('MatchScores')
                     if len(apiInfo) == 0:
@@ -690,7 +733,7 @@ async def on_message(message):
                     code = API_CODES.get(id)
 
                     info = discord.Embed(title = id + ' Scores for ' + teams[int(team)][3])
-                    info.set_footer(text = 'Data from FIRST API: https://ftc-events.firstinspires.org/services/API')
+                    info.set_footer(text = 'Source: FIRST API - https://ftc-events.firstinspires.org/services/API')
 
                     apiInfo = first_request('scores/' + code + '/qual?teamnumber=' + team).json().get('MatchScores')
                     if len(apiInfo) == 0:
@@ -718,7 +761,7 @@ async def on_message(message):
                             if count % 2 == 0:
                                 await message.channel.send(content = None, embed = info)
                                 info = discord.Embed(title = id + ' Scores for ' + teams[int(team)][3] + ' (cont)')
-                                info.set_footer(text = 'Data from FIRST API: https://ftc-events.firstinspires.org/services/API')
+                                info.set_footer(text = 'Source: FIRST API - https://ftc-events.firstinspires.org/services/API')
                 except:
                     await message.channel.send('The competition ID or team number is invalid or the detailed scores have not been published yet.')
 
@@ -726,28 +769,34 @@ async def on_message(message):
         elif command.find('$' + COMMANDS[34]) == 0:
             await log(34, command, guild)
             lookup = command.split(' ')
-            ca = False
+            globalData = False
+            region = 'Global'
+
             if len(lookup) > 1:
-                if lookup[1] in ['norcal', 'cal', 'ca']:
-                    ca = True
+                if lookup[1] == 'norcal':
+                    region = 'NorCal'
+                elif lookup[1] == 'socal':
+                    region = 'SoCal'
+                elif lookup[1] in ['cal', 'ca']:
+                    region = 'California'
                 elif lookup[1] == 'global':
-                    ca = False
+                    globalData = True
                 else:
-                    await message.channel.send('Only Global and Cal Regions Supported')
+                    await message.channel.send('Only Global, NorCal, SoCal, and Cal Regions Supported')
                     return
 
-            await message.channel.send('Looking up ' + ('Cal' if ca else 'Global') + ' Top Team Data')
-            info = discord.Embed(title = 'California Top 15 Ranked Teams' if ca else 'Global Top 15 Ranked Teams')
-            info.set_footer(text = 'Data from FTC Stats API: https://dynamic.jackcrane.rocks/api/ftcstats/docs.php')
+            await message.channel.send('Looking up ' + region + ' Top Team Data')
+            info = discord.Embed(title = region + ' Top 15 Ranked Teams')
+            info.set_footer(text = 'Source: FTC Stats API - https://dynamic.jackcrane.rocks/api/ftcstats/docs.php')
 
             response2 = None
-            if ca:
-                payload = {'location': 'California'}
-                payload2 = {'rank': '<= 250'}
-                response2 = requests.post("https://dynamic.jackcrane.rocks/api/ftcstats/fetch.php", data = payload2).json().get('data')
-            else:
+            if globalData:
                 payload = {'rank': '<= 50'}
-            response = requests.post("https://dynamic.jackcrane.rocks/api/ftcstats/fetch.php", data = payload).json().get('data')
+            else:
+                payload = {'location': region}
+                payload2 = {'rank': '<= 250'}
+                response2 = requests.post('https://dynamic.jackcrane.rocks/api/ftcstats/fetch.php', data = payload2).json().get('data')
+            response = requests.post('https://dynamic.jackcrane.rocks/api/ftcstats/fetch.php', data = payload).json().get('data')
 
             names = []
             for key in response.keys():
@@ -756,7 +805,7 @@ async def on_message(message):
                     name = data.get('teamname')
                     if names.count(name) == 0:
                         rank = '-1'
-                        if ca:
+                        if not globalData:
                             names2 = []
                             for key2 in response2.keys():
                                 name2 = response2.get(key2).get('teamname')
@@ -768,7 +817,7 @@ async def on_message(message):
                             if rank == '-1':
                                 rank = '250+'
 
-                        info.add_field(name = str(len(names) + 1) + ". " + data.get('teamname'), value = 'OPR: ' + str(data.get('opr')) + '\nMax score: ' + str(data.get('max_np_score')) + (('\nGlobal Rank: ' + rank) if ca else ''))
+                        info.add_field(name = str(len(names) + 1) + '. ' + data.get('teamname'), value = 'OPR: ' + str(data.get('opr')) + '\nMax score: ' + str(data.get('max_np_score')) + ('' if globalData else ('\nGlobal Rank: ' + rank)))
                         names.append(name)
 
             await message.channel.send(content = None, embed = info)
@@ -777,25 +826,28 @@ async def on_message(message):
         elif command.find('$' + COMMANDS[35]) == 0:
             await log(35, command, guild)
             lookup = command.split(' ')
-            ca = False
+            region = ''
+
             if len(lookup) > 1:
-                if lookup[1] in ['norcal', 'cal', 'ca']:
-                    ca = True
+                if lookup[1] == 'norcal':
+                    region = 'NorCal'
+                elif lookup[1] == 'socal':
+                    region = 'SoCal'
+                elif lookup[1] in ['cal', 'ca']:
+                    region = 'California'
                 elif lookup[1] == 'global':
-                    ca = False
+                    region = 'Global'
                 else:
-                    await message.channel.send('Only Global and Cal Regions Supported')
+                    await message.channel.send('Only Global, NorCal, SoCal, and Cal Regions Supported')
                     return
 
-            await message.channel.send('Looking up ' + ('Cal' if ca else 'Global') + ' High Score Data')
-            info = discord.Embed(title = 'California Top 10 Scores' if ca else 'Global Top 10 Scores', description = 'Scores/Rings ([auto]/[teleop])')
-            info.set_footer(text = 'Data from FTC Stats API: https://dynamic.jackcrane.rocks/api/ftcstats/docs.php')
+            await message.channel.send('Looking up ' + region + ' High Score Data')
+            info = discord.Embed(title = region + ' Top 10 Scores', description = 'Scores/Rings ([auto]/[teleop])')
+            info.set_footer(text = 'Source: FTC Stats API - https://dynamic.jackcrane.rocks/api/ftcstats/docs.php')
 
-            region = 'index'
-            if ca:
-                region = 'california'
+            region = 'index' if region == 'Global' else region.lower()
 
-            html = get_raw_html('http://www.ftcstats.org/2021/'+ region + '.html')
+            html = get_raw_html('http://www.ftcstats.org/2021/' + region + '.html')
             data = re.compile('<td align="right" width="4%">(.*?)</td><td align="right" width="4%">(.*?)</td><td align="right" width="4%">(.*?)</td><td align="right" width="4%">(.*?)</td><td align="right" width="4%">(.*?)'
                               '</td><td align="right" width="4%">(.*?)</td><td align="right" width="4%">(.*?)</td><td><a href=.*?>(.*?)</a></td><td></td><td></td><td>(.*?)</td>', re.DOTALL).findall(html)
 
@@ -809,7 +861,7 @@ async def on_message(message):
         # sourcecode
         elif '$' + COMMANDS[36] in command:
             await log(36, command, guild)
-            await message.channel.send('https://github.com/norcalbotftc/NorCalBot')
+            await message.channel.send('[My Source Code](https://github.com/norcalbotftc/NorCalBot)')
 
         # resources
         elif '$' + COMMANDS[37] in command:
@@ -822,6 +874,9 @@ async def on_message(message):
             resources.add_field(name = 'GM2 - Remote', value = '[Game Manual 2 - Remote](https://www.firstinspires.org/sites/default/files/uploads/resource_library/ftc/game-manual-part-2-remote-events.pdf)')
             resources.add_field(name = 'UG Scorer', value = '[Ultimate Goal Scorer App](http://roboavatars.weebly.com/ultimategoalscorer.html)')
             resources.add_field(name = 'OpenOdo', value = '[OpenOdometry](https://openodometry.weebly.com/)')
+            resources.add_field(name = 'NorCal FTC', value = '[norcalftc.org](https://www.norcalftc.org)')
+            resources.add_field(name = 'FIRST API', value = '[FIRST API](https://ftc-events.firstinspires.org/services/API)')
+            resources.add_field(name = 'FTC Stats API', value = '[FTC Stats API](https://dynamic.jackcrane.rocks/api/ftcstats/docs.php)')
             await message.channel.send(content = None, embed = resources)
 
         # dm
@@ -830,6 +885,16 @@ async def on_message(message):
             await message.channel.send('Starting DM with ' + author.mention)
             dm = await author.create_dm()
             await dm.send('You requested a DM! Here it is!')
+
+        # suggest
+        elif command.find('$' + COMMANDS[39]) == 0:
+            await log(39, command, guild)
+            suggestion = command.split(' ')
+            if suggestion[0] != '$suggest' or len(suggestion) == 1:
+                await message.channel.send('For suggesting a new command or reporting a bug, type "$suggest", a space, and your message. If you are suggesting a new command, include the command as well as what it is supposed to do. If you are reporting a bug, include the command that is not working as well as a detailed explanation of what went wrong.')
+            else:
+                await client.get_guild(TEST_GUILD).get_channel(TEST_CHANNEL).send('(' + author.mention + ') <@' + str(ADMIN_IDS[0]) + '> ' + ' '.join(suggestion[1:]))
+                await message.channel.send('You suggestion has been sent!\nIf you suggested a new command, hopefully you sent the command as well as what it is supposed to do. If you reported a bug, hopefully you sent the command that was not working as well as a detailed explanation of what went wrong.\nIf you didn\'t do this, just send another suggestion.')
 
 # Run Bot
 client.loop.create_task(update())

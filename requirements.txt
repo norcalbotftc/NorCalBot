@@ -1,6 +1,7 @@
 asyncio
 beautifulsoup4
 discord.py
+psycopg2
 python-dotenv
 pytz
 requests
